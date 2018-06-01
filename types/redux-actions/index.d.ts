@@ -5,17 +5,41 @@
 //                 Alec Hill <https://github.com/alechill>
 //                 Alexey Pelykh <https://github.com/alexey-pelykh>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 2.2
+// TypeScript Version: 2.8
 
 export as namespace ReduxActions;
 
 // FSA-compliant action.
 // See: https://github.com/acdlite/flux-standard-action
-export interface BaseAction {
-    type: string;
+interface BaseAction<T>{
+    type: T;
+}
+interface Payload<P> {
+    payload: P;
 }
 
-export interface Action<Payload> extends BaseAction {
+type Meta<M> = {
+    meta: M;
+}
+
+interface Error<E> {
+    error: E;
+}
+
+type ActionWithPayload<A, P = undefined> = P extends undefined ? A : A &  A & Payload<P>
+type ActionWithMeta<A, M = undefined> = M extends undefined ? A : A & Meta<M>
+type ActionWithError<A, E = undefined> = E extends undefined ? A : A & Error<E>
+
+export type StandardAction<T, P = undefined, E = undefined, M = undefined> =
+    ActionWithError<
+        ActionWithMeta<
+            ActionWithPayload<
+                BaseAction<T>,
+            P>,
+        M>,
+    E>
+
+export interface Action<Payload> extends BaseAction<string> {
     payload?: Payload;
     error?: boolean;
 }
@@ -74,8 +98,8 @@ export type ActionFunction4<T1, T2, T3, T4, R> = (t1: T1, t2: T2, t3: T3, t4: T4
 export type ActionFunctionAny<R> = (...args: any[]) => R;
 
 // https://github.com/redux-utilities/redux-actions/blob/v2.3.0/src/createAction.js#L6
-export function createAction(
-    actionType: string
+export function createAction<T>(
+    actionType: T
 ): ActionFunctionAny<Action<any>>;
 
 export function createAction<Payload>(
